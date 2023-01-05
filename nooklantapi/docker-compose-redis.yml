@@ -1,0 +1,12 @@
+version: '3.6'
+services:
+  cache:
+    image: redis:7.0.7-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-cache:/data
+volumes:
+  redis-cache:
+    driver: local
