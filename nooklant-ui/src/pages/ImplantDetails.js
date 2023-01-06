@@ -5,38 +5,30 @@ import moment from 'moment';
 const ImplantDetails = (props) => {
     let { guid } = useParams();
 
-    const [nook, setNook] = useState({
-        id: 1,
-        guid: "TYGH-T63E-DSWQ-ASXD",
-        active: true,
-        ipAddrExt: "109.212.34.1",
-        ipAddrInt: "127.0.0.1",
-        username: "Dave",
-        hostname: "perfidy",
-        os: "Win10",
-        osBuild: "19045.2364",
-        osVersion: "22H2",
-        pid: 1092,
-        sleepTimeSeconds: 3000,
-        killTimeHours: 12,
-        firstCheckIn: 1672844124,
-        lastCheckIn: 1672834411,
-        task: null,
-        hostingFile: null,
-        cryptKey: "SOMETESTGARBAGE=",
-        expired: null
-    })
+    const [nook, setNook] = useState({})
+    const [error, setError] = useState();
 
     useEffect(() => {
-        let kill_time = moment.unix(nook.lastCheckIn)
-        let expires = kill_time.add(nook.killTimeHours, 'hours')
-        let update = nook['expires'] = moment(expires).format("MM/DD/YYYY HH:mm:ss")
-        if (moment(nook.expires).isBefore()) {
-            update = nook.expired = true
-        }
-        setNook({ ...nook, update })
-        console.log(nook)
-    }, []);
+        fetch(`http://localhost:5000/api/v1/nook/${guid}`)
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    let kill_time = moment.unix(result.lastCheckIn)
+                    let expires = kill_time.add(result.killTimeHours, 'hours')
+                    let update = result['expires'] = moment(expires).format("DD/MM/YYYY HH:mm:ss")
+                    if (result.expires < moment(moment.now()).format("DD/MM/YYYY HH:mm:ss")) {
+                        update = result.expired = true
+                    }
+                    setNook(result)
+                },
+                (error) => {
+                    setError(error);
+                }
+            )
+    }, [])
+
+    useEffect(() => {
+    }, [nook]);
 
     return (
         <div className="font-sans flex flex-col w-full">
@@ -45,10 +37,10 @@ const ImplantDetails = (props) => {
                     <div className="border-b px-6">
                         <div className="flex justify-between -mb-px">
                             <div className="text-blue-dark py-4 text-lg">
-                                {nook.guid} is <span className={nook.active ? "text-lime-500" : "text-red-800"}>
-                                    {nook.active ? "Active" : "Expired"}</span>
+                                {nook?.guid} is <span className={nook?.active ? "text-lime-500" : "text-red-800"}>
+                                    {nook?.active ? "Active" : "Expired"}</span>
                                 <span className='text-dark-blue'> on
-                                    external address {nook.ipAddrExt} and internal address {nook.ipAddrInt}
+                                    external address {nook?.ipAddrExt} and internal address {nook?.ipAddrInt}
                                 </span>
                             </div>
                         </div>
@@ -57,7 +49,7 @@ const ImplantDetails = (props) => {
                         <div className="w-1/3 text-center py-8">
                             <div className="border-r">
                                 <div className="text-grey-darker mb-2">
-                                    <span className="text-2xl">{moment.unix(nook.firstCheckIn).format("MM/DD/YYYY HH:mm:ss")}</span>
+                                    <span className="text-2xl">{moment.unix(nook?.firstCheckIn).format("DD/MM/YYYY HH:mm:ss")}</span>
                                 </div>
                                 <div className="text-sm uppercase text-grey tracking-wide">
                                     initial deployment
@@ -67,22 +59,22 @@ const ImplantDetails = (props) => {
                         <div className="w-1/3 text-center py-8">
                             <div className="border-r">
                                 <div className="text-grey-darker mb-2">
-                                    <span className="text-2xl">{moment(moment.unix(nook.lastCheckIn)).fromNow()}</span>
+                                    <span className="text-2xl">{moment(moment.unix(nook?.lastCheckIn)).fromNow()}</span>
                                 </div>
                                 <div className="text-sm uppercase text-grey tracking-wide">
                                     last seen
                                 </div>
                             </div>
                         </div>
-                        <div className={nook.expired ?
+                        <div className={nook?.expired ?
                             "text-red-800 w-1/3 text-center py-8" :
                             "w-1/3 text-center py-8 text-lime-500"}>
                             <div>
                                 <div className="mb-2">
-                                    <span className="text-2xl">{nook.expires}</span>
+                                    <span className="text-2xl">{nook?.expires}</span>
                                 </div>
                                 <div className="text-sm uppercase tracking-wide">
-                                    {nook.expired ? "Expired" : `expiry with kill time of ${nook.killTimeHours} hours`}
+                                    {nook?.expired ? "Missed check in" : `expiry with kill time of ${nook?.killTimeHours} hours`}
                                 </div>
                             </div>
                         </div>
@@ -91,7 +83,6 @@ const ImplantDetails = (props) => {
 
 
                 <div className="flex flex-wrap -mx-4">
-
                     <div className="w-full mb-6 lg:mb-0 lg:w-1/2 px-4 flex flex-col">
                         <div className="flex-grow flex flex-col border-t border-b sm:rounded sm:border shadow overflow-hidden dark:text-gray-400">
                             <div className="border-b">
@@ -148,9 +139,9 @@ const ImplantDetails = (props) => {
                             <div>
                                 <div className="text-left px-6">
                                     <div className="py-2">
-                                        <div className="mb-4">Hostname: {nook.hostname}</div>
-                                        <div className="mb-4">User: {nook.username}</div>
-                                        <div className="mb-4">PID: {nook.pid}</div>
+                                        <div className="mb-4">Hostname: {nook?.hostname}</div>
+                                        <div className="mb-4">User: {nook?.username}</div>
+                                        <div className="mb-4">PID: {nook?.pid}</div>
                                     </div>
 
                                 </div>
@@ -167,9 +158,9 @@ const ImplantDetails = (props) => {
                             <div>
                                 <div className="text-left px-6">
                                     <div className="py-2">
-                                        <div className="mb-4">OS: {nook.os}</div>
-                                        <div className="mb-4">OS Build: {nook.osBuild}</div>
-                                        <div className="mb-4">OS Version: {nook.osVersion}</div>
+                                        <div className="mb-4">OS: {nook?.os}</div>
+                                        <div className="mb-4">OS Build: {nook?.osBuild}</div>
+                                        <div className="mb-4">OS Version: {nook?.osVersion}</div>
                                         <div className="mb-4">PSP: Malware Bytes, Defender</div>
                                     </div>
 

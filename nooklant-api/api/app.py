@@ -7,6 +7,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 from db import mysql
+from socket_helper import socketio
 from core import api
 from core import blueprint as web_api
 from config import config as app_config
@@ -24,12 +25,15 @@ def create_app():
     app.register_blueprint(web_api)
 
     CORS(app, resources={r'/api/*': {'origins': '*'}})
+   # socketio = SocketIO(app, cors_allowed_origins="*")
+    socketio.init_app(app)
 
     app.config['MYSQL_USER'] = environ.get('MYSQL_USER')
     app.config['MYSQL_PASSWORD'] = environ.get('MYSQL_PASSWORD')
     app.config['MYSQL_HOST'] = environ.get('MYSQL_HOST')
     app.config['MYSQL_DB'] = environ.get('MYSQL_DB')
     app.config['MYSQL_CURSORCLASS'] = environ.get('MYSQL_CURSORCLASS')
+    app.config['MYSQL_PORT'] = 6603
 
     mysql.init_app(app)
     api.init_app(app, add_specs=False)

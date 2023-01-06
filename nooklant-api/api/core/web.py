@@ -1,7 +1,8 @@
 """ The api for web interface - purely feeds the UI """
 from flask_restx import Namespace, Resource, fields
-
 from db import mysql
+from socket_helper import socketio
+from flask_socketio import emit
 
 api = Namespace("nook", description="Web api for nook related operations")
 
@@ -53,6 +54,31 @@ class Nook(Resource):
         """Fetch a nook given its identifier"""
         cur = mysql.connection.cursor()
         cur.execute("SELECT * from nooks where guid = %s", [guid])
-        categories = cur.fetchall()
+        nook = cur.fetchall()
         cur.close()
-        return list(categories)
+        return nook
+
+
+@socketio.on("connect")
+def connected():
+    """event listener when client connects to the server"""
+    print("client has connected")
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * from nooks')
+    categories = cur.fetchall()
+    cur.close()
+    emit("connect", list(categories))
+
+
+@socketio.on('data')
+def handle_message(data):
+    """event listener when client types a message"""
+    print("data from the front end: ", str(data))
+    emit("data", {'data': data, 'id': 'test'}, broadcast=True)
+
+
+@socketio.on("disconnect")
+def disconnected():
+    """event listener when client disconnects to the server"""
+    print("user disconnected")
+    emit("disconnect", f"user disconnected", broadcast=True)
