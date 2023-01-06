@@ -7,14 +7,13 @@ basedir = path.abspath(path.join(path.dirname(__file__), '..'))
 class BaseConfig(object):
     ''' Base config class. '''
 
-    APP_NAME = environ.get('APP_NAME') or 'flask-boilerplate'
+    APP_NAME = environ.get('APP_NAME') or 'nookplant'
     ORIGINS = ['*']
     EMAIL_CHARSET = 'UTF-8'
     API_KEY = environ.get('API_KEY')
     BROKER_URL = environ.get('BROKER_URL')
     RESULT_BACKEND = environ.get('RESULT_BACKEND')
     LOG_INFO_FILE = path.join(basedir, 'log', 'info.log')
-    LOG_CELERY_FILE = path.join(basedir, 'log', 'celery.log')
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
@@ -49,15 +48,6 @@ class BaseConfig(object):
                 'handlers': ['log_info_file'],
             },
         },
-    }
-
-    CELERY_LOGGING = {
-        'format': '[%(asctime)s] - %(name)s - %(levelname)s - '
-        '%(message)s',
-        'datefmt': '%b %d %Y %H:%M:%S',
-        'filename': LOG_CELERY_FILE,
-        'maxBytes': 10000000,  # 10megabytes
-        'backupCount': 5
     }
 
 
