@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from "react-router-dom"
 import moment from 'moment';
 import { HeartIcon, ServerIcon, ClockIcon } from '@heroicons/react/24/outline'
@@ -6,8 +6,8 @@ import socketIO from 'socket.io-client';
 
 const Implants = () => {
     const [nooks, setNooks] = useState([]);
-    const [error, setError] = useState();
-    const [socketInstance, setSocketInstance] = useState("");
+
+    const timer = useRef();
 
     useEffect(() => {
         const socket = socketIO("localhost:5000/", {
@@ -16,17 +16,29 @@ const Implants = () => {
                 origin: "http://localhost:3000/",
             },
         });
-        setSocketInstance(socket);
         socket.on("connect", (data) => {
             if (data) {
                 setNooks(data)
             }
         });
+        timer.current = setInterval(() => {
+            socket.emit("data")
+        }, 10000);
+        socket.on("data", (data) => {
+            if (data) {
+                setNooks(data)
+            }
+        });
+        return (() => {
+            clearInterval(timer.current)
+            socket.disconnect()
+        })
     }, [])
 
     function time_diff(last_check_in) {
         return moment(moment.unix(last_check_in)).fromNow()
     }
+
     return (
         <div className="grid grid-flow-row-dense grid-cols-1 ">
             {nooks.map((item, i) => {

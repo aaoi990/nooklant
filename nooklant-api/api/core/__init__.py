@@ -3,6 +3,7 @@ from flask import Blueprint
 from flask_restx import Api
 
 from .web import api as web_api
+from .nookplant import api as service_api
 
 blueprint = Blueprint('web_api', __name__, url_prefix='/api/v1')
 
@@ -14,3 +15,4 @@ api = Api(
 )
 
 api.add_namespace(web_api)
+api.add_namespace(service_api)

@@ -1,7 +1,6 @@
 from app import create_app
 from socket_helper import socketio
 
-
 app = create_app()
 
 if __name__ == '__main__':

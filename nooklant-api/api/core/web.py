@@ -1,34 +1,13 @@
 """ The api for web interface - purely feeds the UI """
-from flask_restx import Namespace, Resource, fields
+from flask_restx import Namespace, Resource
 from db import mysql
 from socket_helper import socketio
 from flask_socketio import emit
+from models.nook import Nook as nook_model
 
-api = Namespace("nook", description="Web api for nook related operations")
+api = Namespace("web", description="Web api for nook related operations")
 
-nook = api.model(
-    "Nook",
-    {
-        "id": fields.String(required=True),
-        "guid": fields.String(required=True),
-        "active": fields.Boolean(required=True),
-        "ipAddrExt": fields.String(required=True),
-        "ipAddrInt": fields.String(required=True),
-        "username": fields.String(required=True),
-        "hostname": fields.String(required=True),
-        "os": fields.String(required=True),
-        "osBuild": fields.String(required=True),
-        "osVersion": fields.String(required=True),
-        "pid": fields.Integer(required=True),
-        "sleepTimeSeconds": fields.Integer(required=True),
-        "killTimeHours": fields.Integer(required=True),
-        "firstCheckIn": fields.Integer(required=True),
-        "lastCheckIn": fields.Integer(required=True),
-        "task": fields.String(required=False),
-        "hostingFile": fields.String(required=False),
-        "cryptKey": fields.String(required=True)
-    },
-)
+nook = api.model("Nook", nook_model)
 
 
 @api.route("/")
@@ -71,10 +50,13 @@ def connected():
 
 
 @socketio.on('data')
-def handle_message(data):
+def handle_message():
     """event listener when client types a message"""
-    print("data from the front end: ", str(data))
-    emit("data", {'data': data, 'id': 'test'}, broadcast=True)
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * from nooks')
+    categories = cur.fetchall()
+    cur.close()
+    emit("data", list(categories))
 
 
 @socketio.on("disconnect")
